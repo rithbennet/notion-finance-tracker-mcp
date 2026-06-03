@@ -1,0 +1,43 @@
+{
+  "name": "notion-finance-tracker",
+  "version": "1.0.0",
+  "description": "Personal finance MCP server for a Notion budget tracker.",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "cf:deploy": "wrangler deploy --secrets-file .env",
+    "cf:dev": "wrangler dev --env-file .env --show-interactive-dev-session=false",
+    "cf:dry-run": "wrangler deploy --dry-run --outdir dist-worker",
+    "cf:secrets": "wrangler secret bulk .env",
+    "cf:types": "wrangler types",
+    "dev": "tsx src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "notion",
+    "finance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "notion-finance-mcp": "dist/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@notionhq/client": "^5.22.0",
+    "agents": "^0.14.0",
+    "dotenv": "^17.4.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8",
+    "wrangler": "^4.97.0"
+  }
+}
