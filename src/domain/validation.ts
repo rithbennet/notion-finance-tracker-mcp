@@ -23,8 +23,7 @@ export const createExpenseSchema = z.object({
   tags: optionalNameList.describe("Expense Tags multi-select values."),
   withWho: optionalNameList.describe("With Who multi-select values."),
   subscription: trimmedString.optional().describe("Optional subscription row to link."),
-  reviewStatus: z.enum(reviewStatuses).default("Needs Review ⚠️"),
-  idempotencyKey: trimmedString.optional().describe("Optional caller-supplied duplicate-prevention key.")
+  reviewStatus: z.enum(reviewStatuses).default("Needs Review ⚠️")
 });
 
 export const createIncomeSchema = z.object({
@@ -33,8 +32,7 @@ export const createIncomeSchema = z.object({
   date: isoDate.describe("ISO date or datetime, e.g. 2026-06-03."),
   account: trimmedString.describe("Exact account name from the Accounts data source."),
   type: z.enum(incomeTypes).default("Other"),
-  month: trimmedString.optional().describe("Optional Month Classification row title."),
-  idempotencyKey: trimmedString.optional()
+  month: trimmedString.optional().describe("Optional Month Classification row title.")
 });
 
 export const createTransferSchema = z.object({
@@ -43,8 +41,7 @@ export const createTransferSchema = z.object({
   date: isoDate.describe("ISO date or datetime, e.g. 2026-06-03."),
   fromAccount: trimmedString.describe("Exact source account name."),
   toAccount: trimmedString.describe("Exact destination account name."),
-  goal: trimmedString.optional().describe("Optional goal row title."),
-  idempotencyKey: trimmedString.optional()
+  goal: trimmedString.optional().describe("Optional goal row title.")
 }).superRefine((value, ctx) => {
   if (value.fromAccount.toLowerCase() === value.toAccount.toLowerCase()) {
     ctx.addIssue({

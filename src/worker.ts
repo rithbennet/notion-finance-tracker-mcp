@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { AgentContext } from "agents";
 import { McpAgent } from "agents/mcp";
-import { getFinanceRuntimeConfig, type RuntimeEnv } from "./config.js";
+import { getFinanceRuntimeConfig, SERVER_NAME, SERVER_VERSION, type RuntimeEnv } from "./config.js";
 import { createNotionClient } from "./notion/client.js";
 import { gptActionsOpenApiSpec } from "./openapi.js";
 import { handleFinanceApiRequest, isFinanceApiPath } from "./rest.js";
@@ -25,8 +25,8 @@ export class FinanceMCP extends McpAgent<FinanceWorkerEnv, FinanceWorkerState, F
   private readonly financeEnv: FinanceWorkerEnv;
 
   server = new McpServer({
-    name: "notion-finance-mcp",
-    version: "0.1.0"
+    name: SERVER_NAME,
+    version: SERVER_VERSION
   });
 
   constructor(ctx: AgentContext, env: FinanceWorkerEnv) {
@@ -53,7 +53,8 @@ export default {
 
     if (url.pathname === "/" && request.method === "GET") {
       return Response.json({
-        name: "notion-finance-mcp",
+        name: SERVER_NAME,
+        version: SERVER_VERSION,
         transport: "streamable-http",
         mcpPath: "/mcp",
         openApiPath: "/openapi.json",
@@ -137,22 +138,9 @@ function getBearerToken(env: FinanceWorkerEnv): string | undefined {
 }
 
 function toRuntimeEnv(env: FinanceWorkerEnv): RuntimeEnv {
-  return {
-    NOTION_API_KEY: env.NOTION_API_KEY,
-    NOTION_TOKEN: env.NOTION_TOKEN,
-    NOTION_EXPENSES_DATA_SOURCE_ID: env.NOTION_EXPENSES_DATA_SOURCE_ID,
-    NOTION_BUDGET_DATA_SOURCE_ID: env.NOTION_BUDGET_DATA_SOURCE_ID,
-    NOTION_INCOMES_DATA_SOURCE_ID: env.NOTION_INCOMES_DATA_SOURCE_ID,
-    NOTION_ACCOUNTS_DATA_SOURCE_ID: env.NOTION_ACCOUNTS_DATA_SOURCE_ID,
-    NOTION_TRANSFERS_DATA_SOURCE_ID: env.NOTION_TRANSFERS_DATA_SOURCE_ID,
-    NOTION_SUBSCRIPTIONS_DATA_SOURCE_ID: env.NOTION_SUBSCRIPTIONS_DATA_SOURCE_ID,
-    NOTION_GOALS_DATA_SOURCE_ID: env.NOTION_GOALS_DATA_SOURCE_ID,
-    NOTION_MONTHS_DATA_SOURCE_ID: env.NOTION_MONTHS_DATA_SOURCE_ID,
-    NOTION_EXPENSES_DATABASE_ID: env.NOTION_EXPENSES_DATABASE_ID,
-    NOTION_INCOMES_DATABASE_ID: env.NOTION_INCOMES_DATABASE_ID,
-    NOTION_TRANSFERS_DATABASE_ID: env.NOTION_TRANSFERS_DATABASE_ID,
-    FINANCE_MCP_BEARER_TOKEN: env.FINANCE_MCP_BEARER_TOKEN
-  };
+  // config.readEnv only ever reads named string keys, so the Worker env (including
+  // non-string bindings like the Durable Object) can be passed through directly.
+  return env as unknown as RuntimeEnv;
 }
 
 function isLocalHostname(hostname: string): boolean {

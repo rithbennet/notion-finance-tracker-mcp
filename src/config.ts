@@ -3,6 +3,9 @@ import process from "node:process";
 
 export type RuntimeEnv = Record<string, string | undefined>;
 
+export const SERVER_NAME = "notion-finance-mcp";
+export const SERVER_VERSION = "1.0.0";
+
 export type FinanceRuntimeConfig = {
   notionApiKey: string;
   bearerToken?: string;

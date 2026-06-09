@@ -1,6 +1,9 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { FinanceRuntimeConfig } from "./config.js";
 import {
+  bulkCreateExpenseSchema,
+  bulkMarkExpenseReviewedSchema,
+  bulkUpdateExpenseCategorySchema,
   createExpenseSchema,
   createIncomeSchema,
   createTransferSchema,
@@ -16,6 +19,9 @@ import { findDuplicateExpenses, listAccounts, listBudgets, listMonths } from "./
 import { createDataSources } from "./notion/schema.js";
 import type { NotionClientLike } from "./notion/types.js";
 import {
+  bulkCreateExpenses,
+  bulkMarkExpensesReviewed,
+  bulkUpdateExpenseCategories,
   createExpense,
   createIncome,
   createTransfer,
@@ -184,6 +190,54 @@ export function registerFinanceTools(server: McpServer, notion: NotionClientLike
       }
     },
     async (input) => asToolResponse(await linkExpenseToSubscription(notion, config, linkExpenseToSubscriptionSchema.parse(input)))
+  );
+
+  server.registerTool(
+    "finance_bulk_create_expense",
+    {
+      title: "Bulk Create Expenses",
+      description: "Create up to 10 validated expenses in one call. Returns per-item success or error results.",
+      inputSchema: bulkCreateExpenseSchema.shape,
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+        readOnlyHint: false
+      }
+    },
+    async (input) => asToolResponse(await bulkCreateExpenses(notion, config, bulkCreateExpenseSchema.parse(input)))
+  );
+
+  server.registerTool(
+    "finance_bulk_update_expense_category",
+    {
+      title: "Bulk Update Expense Categories",
+      description: "Move up to 25 expenses to budget categories in one call. Returns per-item success or error results.",
+      inputSchema: bulkUpdateExpenseCategorySchema.shape,
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+        readOnlyHint: false
+      }
+    },
+    async (input) => asToolResponse(await bulkUpdateExpenseCategories(notion, config, bulkUpdateExpenseCategorySchema.parse(input)))
+  );
+
+  server.registerTool(
+    "finance_bulk_mark_expense_reviewed",
+    {
+      title: "Bulk Mark Expenses Reviewed",
+      description: "Set the Review Status for up to 25 expenses in one call. Returns per-item success or error results.",
+      inputSchema: bulkMarkExpenseReviewedSchema.shape,
+      annotations: {
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+        readOnlyHint: false
+      }
+    },
+    async (input) => asToolResponse(await bulkMarkExpensesReviewed(notion, config, bulkMarkExpenseReviewedSchema.parse(input)))
   );
 }
 

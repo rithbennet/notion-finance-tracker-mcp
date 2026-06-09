@@ -16,6 +16,9 @@ The server exposes finance-specific tools instead of generic Notion mutation too
 - `finance_list_budgets`
 - `finance_list_months`
 - `finance_find_duplicate_expense`
+- `finance_bulk_create_expense`
+- `finance_bulk_update_expense_category`
+- `finance_bulk_mark_expense_reviewed`
 
 ## Safety Model
 
@@ -23,6 +26,8 @@ The server exposes finance-specific tools instead of generic Notion mutation too
 - Read tools expose finance context without exposing generic Notion queries.
 - Relation inputs use human names and must resolve to exactly one Notion row.
 - Create tools check for duplicate title/date/amount records before writing.
+- Update tools that accept an `expenseId` verify the page belongs to the Expenses data source before mutating it.
+- Notion API calls retry with backoff on rate limits and transient 5xx errors.
 - Formula, rollup, and created-time properties are never written.
 - Local stdio write attempts are appended to `logs/finance-mcp-audit.jsonl`.
 - Cloudflare Worker write attempts are emitted to Worker logs.
