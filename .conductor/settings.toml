@@ -1,0 +1,9 @@
+#:schema https://conductor.build/schemas/settings.repo.schema.json
+
+file_include_globs = ".env\n"
+
+[scripts]
+setup = "pnpm install --frozen-lockfile"
+run = "pnpm run cf:dev -- --port $CONDUCTOR_PORT"
+archive = "rm -rf .wrangler dist-worker"
+run_mode = "concurrent"
