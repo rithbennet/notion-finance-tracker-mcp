@@ -23,6 +23,7 @@
   "author": "",
   "license": "MIT",
   "type": "module",
+  "packageManager": "pnpm@10.29.2",
   "bin": {
     "notion-finance-mcp": "dist/server.js"
   },
