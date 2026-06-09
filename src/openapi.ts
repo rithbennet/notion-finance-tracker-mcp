@@ -1,3 +1,39 @@
+import { z, type ZodType } from "zod";
+import { SERVER_VERSION } from "./config.js";
+import {
+  bulkCreateExpenseSchema,
+  bulkMarkExpenseReviewedSchema,
+  bulkUpdateExpenseCategorySchema,
+  createExpenseSchema,
+  createIncomeSchema,
+  createTransferSchema,
+  findDuplicateExpenseSchema,
+  linkExpenseToSubscriptionSchema,
+  markExpenseReviewedSchema,
+  updateExpenseCategorySchema
+} from "./domain/validation.js";
+
+// Request body schemas are generated from the same zod schemas the API validates against,
+// so the published OpenAPI contract cannot drift from the actual request validation.
+function requestSchema(schema: ZodType): Record<string, unknown> {
+  const jsonSchema = z.toJSONSchema(schema) as Record<string, unknown>;
+  delete jsonSchema.$schema;
+  return jsonSchema;
+}
+
+const requestSchemas = {
+  FindDuplicateExpenseRequest: requestSchema(findDuplicateExpenseSchema),
+  CreateExpenseRequest: requestSchema(createExpenseSchema),
+  CreateIncomeRequest: requestSchema(createIncomeSchema),
+  CreateTransferRequest: requestSchema(createTransferSchema),
+  UpdateExpenseCategoryRequest: requestSchema(updateExpenseCategorySchema),
+  MarkExpenseReviewedRequest: requestSchema(markExpenseReviewedSchema),
+  LinkExpenseToSubscriptionRequest: requestSchema(linkExpenseToSubscriptionSchema),
+  BulkCreateExpenseRequest: requestSchema(bulkCreateExpenseSchema),
+  BulkUpdateExpenseCategoryRequest: requestSchema(bulkUpdateExpenseCategorySchema),
+  BulkMarkExpenseReviewedRequest: requestSchema(bulkMarkExpenseReviewedSchema)
+};
+
 const queryParameter = {
   name: "query",
   in: "query",
@@ -24,7 +60,7 @@ export const gptActionsOpenApiSpec = {
   openapi: "3.1.0",
   info: {
     title: "Notion Finance Tracker Actions",
-    version: "0.1.0",
+    version: SERVER_VERSION,
     description: "REST action adapter for the personal Notion finance tracker. Use these endpoints to read finance context and create or update validated finance records."
   },
   servers: [
@@ -419,133 +455,7 @@ export const gptActionsOpenApiSpec = {
           merchant: { type: "string" }
         }
       },
-      FindDuplicateExpenseRequest: {
-        type: "object",
-        description: "Provide at least one of expense, amount, date, or merchant.",
-        properties: {
-          expense: { type: "string", minLength: 1 },
-          amount: { type: "number", exclusiveMinimum: 0 },
-          date: { type: "string", description: "ISO date or datetime." },
-          merchant: { type: "string", minLength: 1 },
-          limit: { type: "integer", minimum: 1, maximum: 50, default: 10 }
-        }
-      },
-      CreateExpenseRequest: {
-        type: "object",
-        required: ["expense", "amount", "date", "account", "budget"],
-        properties: {
-          expense: { type: "string", minLength: 1 },
-          amount: { type: "number", exclusiveMinimum: 0 },
-          date: { type: "string", description: "ISO date or datetime." },
-          account: { type: "string", minLength: 1, description: "Exact account name returned by listAccounts." },
-          budget: { type: "string", minLength: 1, description: "Exact budget category returned by listBudgets." },
-          merchant: { type: "string", minLength: 1 },
-          month: { type: "string", minLength: 1, description: "Exact month name returned by listMonths." },
-          tags: { type: "array", items: { type: "string", minLength: 1 }, default: [] },
-          withWho: { type: "array", items: { type: "string", minLength: 1 }, default: [] },
-          subscription: { type: "string", minLength: 1 },
-          reviewStatus: { $ref: "#/components/schemas/ReviewStatus" },
-          idempotencyKey: { type: "string", minLength: 1 }
-        }
-      },
-      CreateIncomeRequest: {
-        type: "object",
-        required: ["income", "amount", "date", "account"],
-        properties: {
-          income: { type: "string", minLength: 1 },
-          amount: { type: "number", exclusiveMinimum: 0 },
-          date: { type: "string", description: "ISO date or datetime." },
-          account: { type: "string", minLength: 1, description: "Exact account name returned by listAccounts." },
-          type: { type: "string", enum: ["Salary", "Refund", "Other"], default: "Other" },
-          month: { type: "string", minLength: 1, description: "Exact month name returned by listMonths." },
-          idempotencyKey: { type: "string", minLength: 1 }
-        }
-      },
-      BulkCreateExpenseRequest: {
-        type: "object",
-        required: ["items"],
-        properties: {
-          items: {
-            type: "array",
-            minItems: 1,
-            maxItems: 10,
-            items: { $ref: "#/components/schemas/CreateExpenseRequest" }
-          }
-        }
-      },
-      CreateTransferRequest: {
-        type: "object",
-        required: ["transfer", "amount", "date", "fromAccount", "toAccount"],
-        properties: {
-          transfer: { type: "string", minLength: 1 },
-          amount: { type: "number", exclusiveMinimum: 0 },
-          date: { type: "string", description: "ISO date or datetime." },
-          fromAccount: { type: "string", minLength: 1, description: "Exact source account name returned by listAccounts." },
-          toAccount: { type: "string", minLength: 1, description: "Exact destination account name returned by listAccounts." },
-          goal: { type: "string", minLength: 1 },
-          idempotencyKey: { type: "string", minLength: 1 }
-        }
-      },
-      UpdateExpenseCategoryRequest: {
-        type: "object",
-        required: ["budget"],
-        description: "Provide expenseId when possible; otherwise provide the exact expense title.",
-        properties: {
-          expenseId: { type: "string", minLength: 1 },
-          expense: { type: "string", minLength: 1 },
-          budget: { type: "string", minLength: 1, description: "Exact budget category returned by listBudgets." },
-          tags: { type: "array", items: { type: "string", minLength: 1 }, default: [] },
-          reviewStatus: { $ref: "#/components/schemas/ReviewStatus" }
-        }
-      },
-      MarkExpenseReviewedRequest: {
-        type: "object",
-        description: "Provide expenseId when possible; otherwise provide the exact expense title.",
-        properties: {
-          expenseId: { type: "string", minLength: 1 },
-          expense: { type: "string", minLength: 1 },
-          reviewStatus: { $ref: "#/components/schemas/ReviewStatus" }
-        }
-      },
-      BulkUpdateExpenseCategoryRequest: {
-        type: "object",
-        required: ["items"],
-        properties: {
-          items: {
-            type: "array",
-            minItems: 1,
-            maxItems: 25,
-            items: { $ref: "#/components/schemas/UpdateExpenseCategoryRequest" }
-          }
-        }
-      },
-      BulkMarkExpenseReviewedRequest: {
-        type: "object",
-        required: ["items"],
-        properties: {
-          items: {
-            type: "array",
-            minItems: 1,
-            maxItems: 25,
-            items: { $ref: "#/components/schemas/MarkExpenseReviewedRequest" }
-          }
-        }
-      },
-      LinkExpenseToSubscriptionRequest: {
-        type: "object",
-        required: ["subscription"],
-        description: "Provide expenseId when possible; otherwise provide the exact expense title.",
-        properties: {
-          expenseId: { type: "string", minLength: 1 },
-          expense: { type: "string", minLength: 1 },
-          subscription: { type: "string", minLength: 1 }
-        }
-      },
-      ReviewStatus: {
-        type: "string",
-        enum: ["Needs Review ⚠️", "Clean ✅", "Fixed 🔧", "Needs Review", "Clean"],
-        default: "Needs Review ⚠️"
-      },
+      ...requestSchemas,
       WriteResult: {
         type: "object",
         required: ["ok", "action", "summary"],
@@ -614,4 +524,4 @@ export const gptActionsOpenApiSpec = {
       }
     }
   }
-} as const;
+};

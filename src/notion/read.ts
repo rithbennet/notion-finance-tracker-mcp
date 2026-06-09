@@ -200,6 +200,7 @@ export async function resolveExpenseRef(
 ): Promise<ResolvedPage> {
   if (input.expenseId) {
     const page = await notion.pages.retrieve({ page_id: input.expenseId });
+    assertExpensePage(page, expenses);
     return {
       id: String(page.id),
       title: extractTitle(page, expenses.titleProperty),
@@ -212,6 +213,23 @@ export async function resolveExpenseRef(
   }
 
   return resolveByTitle(notion, expenses, input.expense);
+}
+
+function assertExpensePage(page: Record<string, unknown>, expenses: DataSourceDefinition): void {
+  const parent = page.parent as { data_source_id?: string; database_id?: string } | undefined;
+  // Notion (data-source API) returns parent.data_source_id; fall back to verifying the
+  // expenses title property exists so a stray page ID can't be mutated as if it were an expense.
+  if (parent?.data_source_id) {
+    if (parent.data_source_id === expenses.id) {
+      return;
+    }
+    throw new Error(`Page ${String(page.id)} is not in the ${expenses.key} data source.`);
+  }
+
+  const properties = page.properties as Record<string, unknown> | undefined;
+  if (!properties || !(expenses.titleProperty in properties)) {
+    throw new Error(`Page ${String(page.id)} is not a valid ${expenses.key} row.`);
+  }
 }
 
 async function listRows(

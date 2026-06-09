@@ -4,7 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
-import { getFinanceRuntimeConfig, type FinanceRuntimeConfig } from "./config.js";
+import { getFinanceRuntimeConfig, SERVER_NAME, SERVER_VERSION, type FinanceRuntimeConfig } from "./config.js";
 import { createNotionClient } from "./notion/client.js";
 import type { NotionClientLike } from "./notion/types.js";
 import { registerFinanceTools } from "./tools.js";
@@ -13,8 +13,8 @@ export function createServer(options: { config?: FinanceRuntimeConfig; notion?: 
   const config = options.config ?? getFinanceRuntimeConfig();
   const notion = options.notion ?? createNotionClient();
   const server = new McpServer({
-    name: "notion-finance-mcp",
-    version: "0.1.0"
+    name: SERVER_NAME,
+    version: SERVER_VERSION
   });
 
   registerFinanceTools(server, notion, config);
